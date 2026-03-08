@@ -1961,74 +1961,7 @@
     .section.spa-active { display: block !important; }
     .section-separator { display: none !important; }
 
-    /* ── Bloque de bienvenida ── */
-    .welcome-block {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 60px 40px 100px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-    }
-    .welcome-card {
-      position: relative;
-      background: linear-gradient(135deg, rgba(90,31,168,0.12) 0%, rgba(8,5,16,0.6) 100%);
-      border: 1px solid rgba(124,58,232,0.2);
-      border-radius: 16px;
-      padding: 36px 28px 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      cursor: pointer;
-      overflow: hidden;
-      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
-    }
-    .welcome-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--purple-bright), transparent);
-      opacity: 0;
-      transition: opacity 0.25s;
-    }
-    .welcome-card:hover {
-      border-color: rgba(124,58,232,0.5);
-      transform: translateY(-6px);
-      box-shadow: 0 20px 40px rgba(124,58,232,0.15);
-    }
-    .welcome-card:hover::before { opacity: 1; }
-    .welcome-card-icon {
-      font-size: 32px;
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-    .welcome-card-title {
-      font-family: var(--font-heading);
-      font-size: 20px;
-      letter-spacing: 3px;
-      color: var(--white);
-      text-transform: uppercase;
-    }
-    .welcome-card-desc {
-      font-family: var(--font-body);
-      font-size: 13px;
-      color: rgba(180,180,200,0.7);
-      line-height: 1.7;
-      flex: 1;
-    }
-    .welcome-card-cta {
-      font-family: var(--font-ui);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--purple-accent);
-      margin-top: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+
     /* Centrar las 2 cards de la segunda fila */
     .welcome-block .welcome-card:nth-child(4) {
       grid-column: 1 / 2;
@@ -2078,64 +2011,32 @@
     <!-- HERO -->
     <section id="home" class="section">
       <div class="hero-bg"></div>
+      <div class="hero-particles">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
       <div class="hero-content">
-        <img id="hero-logo" class="hero-logo" alt="SAFC" />
-        <h1>SAFC</h1>
+        <div class="hero-logo-wrap">
+          <div class="hero-logo-ring"></div>
+          <img id="hero-logo" class="hero-logo" alt="SAFC" />
+        </div>
+        <div class="hero-divider-top"></div>
+        <h1 class="hero-title">SAFC</h1>
         <p class="hero-subtitle">San Andreas Fighters Council</p>
+        <div class="hero-divider-bottom"></div>
         <p class="hero-desc">
-          La organización de artes marciales más prestigiosa de San Andreas.
+          La organización de artes marciales más prestigiosa de San Andreas.<br>
           Competición de élite, luchadores de clase mundial y una historia forjada en el octágono.
         </p>
-        <span class="hero-cta" onclick="navigateTo('roster')">Ver Luchadores</span>
+        <div class="hero-actions">
+          <span class="hero-cta hero-cta-primary" onclick="navigateTo('roster')">Ver Luchadores</span>
+          <span class="hero-cta hero-cta-secondary" onclick="navigateTo('eventos')">Próximos Eventos</span>
+        </div>
       </div>
     </section>
 
     <!-- Bloque de bienvenida -->
-    <div class="welcome-block">
-      <div class="welcome-card" onclick="navigateTo('staff')">
-        <div class="welcome-card-icon">👥</div>
-        <div class="welcome-card-title">CUERPO DE STAFF</div>
-        <p class="welcome-card-desc">Conocé al equipo directivo y administrativo que hace posible la organización.</p>
-        <span class="welcome-card-cta">Ver Staff →</span>
-      </div>
-      <div class="welcome-card" onclick="navigateTo('roster')">
-        <div class="welcome-card-icon">🥊</div>
-        <div class="welcome-card-title">LUCHADORES</div>
-        <p class="welcome-card-desc">Explorá el roster activo de competidores que representan al SAFC en el octágono.</p>
-        <span class="welcome-card-cta">Ver Roster →</span>
-      </div>
-      <div class="welcome-card" onclick="navigateTo('eventos')">
-        <div class="welcome-card-icon">📅</div>
-        <div class="welcome-card-title">EVENTOS</div>
-        <p class="welcome-card-desc">Próximas peleas, comunicados oficiales y toda la actividad de la organización.</p>
-        <span class="welcome-card-cta">Ver Eventos →</span>
-      </div>
-      <div class="welcome-card" onclick="navigateTo('campeones')">
-        <div class="welcome-card-icon">🏆</div>
-        <div class="welcome-card-title">CAMPEONES</div>
-        <p class="welcome-card-desc">Los actuales portadores del cinturón en cada categoría de peso del SAFC.</p>
-        <span class="welcome-card-cta">Ver Campeones →</span>
-      </div>
-      <div class="welcome-card" onclick="navigateTo('sponsors')">
-        <div class="welcome-card-icon">🤝</div>
-        <div class="welcome-card-title">SPONSORS</div>
-        <p class="welcome-card-desc">Las organizaciones que respaldan y hacen posible el crecimiento del SAFC.</p>
-        <span class="welcome-card-cta">Ver Sponsors →</span>
-      </div>
-    </div>
-    <style>
-      /* Centrar última fila de 2 en grid de 3 */
-      @media (min-width: 901px) {
-        .welcome-block {
-          grid-template-columns: repeat(6, 1fr);
-        }
-        .welcome-block .welcome-card:nth-child(1) { grid-column: 1 / 3; }
-        .welcome-block .welcome-card:nth-child(2) { grid-column: 3 / 5; }
-        .welcome-block .welcome-card:nth-child(3) { grid-column: 5 / 7; }
-        .welcome-block .welcome-card:nth-child(4) { grid-column: 2 / 4; }
-        .welcome-block .welcome-card:nth-child(5) { grid-column: 4 / 6; }
-      }
-    </style>
+    
 
     <div class="section-separator"></div>
 
