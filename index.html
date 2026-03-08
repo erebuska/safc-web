@@ -4380,70 +4380,68 @@
     async function loadFromFirebase() {
       await ensureAuth();
 
-      /* ── STAFF ── */
+      /* ── STAFF: actualizar texto, no reconstruir ── */
       const staffSnap = await getDoc(doc(db, 'safc', 'staff'));
       if (staffSnap.exists()) {
-        const grid = document.querySelector('.staff-grid');
-        const existingCards = grid.querySelectorAll('.staff-card');
-        existingCards.forEach(c => c.remove());
+        const members = staffSnap.data().members;
+        const grid    = document.querySelector('.staff-grid');
+        const cards   = Array.from(grid.querySelectorAll('.staff-card'));
 
-        staffSnap.data().members.forEach(m => {
-          const card = document.createElement('div');
-          card.className = 'staff-card';
-          card.dataset.nombre   = m.nombre;
-          card.dataset.apellido = m.apellido;
-          card.dataset.cargo    = m.cargo;
-          card.dataset.bio      = m.bio;
-
-          // Recuperar foto original del HTML por índice
-          const origStaffCards = document.querySelectorAll('.staff-card');
-          const origStaffPhoto = (!m.noPhoto && m.photoIdx !== undefined && origStaffCards[m.photoIdx])
-            ? origStaffCards[m.photoIdx].querySelector('.staff-card-photo')?.innerHTML || ''
-            : '';
-
-          const photoHtml = m.noPhoto || !origStaffPhoto
-            ? `<div class="staff-card-photo no-photo"><div class="staff-pending-overlay"><span>Foto próximamente</span></div></div>`
-            : `<div class="staff-card-photo">${origStaffPhoto}</div>`;
-
-          card.innerHTML = `
-            <div class="staff-card-actions">
-              <button class="staff-action-btn edit" onclick="staffEditorOpen(this.closest('.staff-card'))" title="Editar">
-                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </button>
-              <button class="staff-action-btn delete" onclick="confirmOpenDelete(this.closest('.staff-card'))" title="Eliminar">
-                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-              </button>
-            </div>
-            ${photoHtml}
-            <div class="staff-card-body">
-              <span class="staff-card-badge">${m.cargo}</span>
-              <div class="staff-card-name">${m.nombre}</div>
-              <div class="staff-card-lastname">${m.apellido}</div>
-              <div class="staff-card-divider"></div>
-              <p class="staff-card-bio">${m.bio}</p>
-            </div>`;
-          grid.appendChild(card);
+        members.forEach((m, i) => {
+          if (i < cards.length) {
+            // Actualizar card existente — solo texto
+            const card = cards[i];
+            card.dataset.nombre   = m.nombre;
+            card.dataset.apellido = m.apellido;
+            card.dataset.cargo    = m.cargo;
+            card.dataset.bio      = m.bio;
+            card.querySelector('.staff-card-name').textContent     = m.nombre;
+            card.querySelector('.staff-card-lastname').textContent = m.apellido;
+            card.querySelector('.staff-card-badge').textContent    = m.cargo;
+            card.querySelector('.staff-card-bio').textContent      = m.bio;
+          } else {
+            // Card nueva agregada por Staff — sin foto
+            const card = document.createElement('div');
+            card.className = 'staff-card';
+            card.dataset.nombre   = m.nombre;
+            card.dataset.apellido = m.apellido;
+            card.dataset.cargo    = m.cargo;
+            card.dataset.bio      = m.bio;
+            card.innerHTML = `
+              <div class="staff-card-actions">
+                <button class="staff-action-btn edit" onclick="staffEditorOpen(this.closest('.staff-card'))" title="Editar">
+                  <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="staff-action-btn delete" onclick="confirmOpenDelete(this.closest('.staff-card'))" title="Eliminar">
+                  <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>
+              <div class="staff-card-photo no-photo"><div class="staff-pending-overlay"><span>Foto próximamente</span></div></div>
+              <div class="staff-card-body">
+                <span class="staff-card-badge">${m.cargo}</span>
+                <div class="staff-card-name">${m.nombre}</div>
+                <div class="staff-card-lastname">${m.apellido}</div>
+                <div class="staff-card-divider"></div>
+                <p class="staff-card-bio">${m.bio}</p>
+              </div>`;
+            grid.appendChild(card);
+          }
         });
+
+        // Eliminar cards sobrantes si se borró algún miembro
+        if (members.length < cards.length) {
+          cards.slice(members.length).forEach(c => c.remove());
+        }
       }
 
-      /* ── ROSTER ── */
+      /* ── ROSTER: actualizar texto, mantener fotos ── */
       const rosterSnap = await getDoc(doc(db, 'safc', 'roster'));
       if (rosterSnap.exists()) {
-        const grid = document.querySelector('.roster-grid');
-        grid.querySelectorAll('.fighter-card').forEach(c => c.remove());
+        const fighters = rosterSnap.data().fighters;
+        const grid     = document.querySelector('.roster-grid');
+        const cards    = Array.from(grid.querySelectorAll('.fighter-card'));
 
-        rosterSnap.data().fighters.forEach(f => {
-          const card = document.createElement('div');
-          card.className = 'fighter-card';
-          card.dataset.nombre   = f.nombre;
-          card.dataset.apellido = f.apellido;
-          card.dataset.apodo    = f.apodo;
-          card.dataset.edad     = f.edad;
-          card.dataset.altura   = f.altura;
-          card.dataset.peso     = f.peso;
-          card.dataset.nac      = f.nac;
-          card.dataset.flag     = f.flag;
-
+        fighters.forEach((f, i) => {
           const nicknameHtml = f.apodo
             ? `<span class="fighter-nickname">"${f.apodo}"</span>`
             : `<span class="fighter-nickname pending">Apodo por definir</span>`;
@@ -4454,86 +4452,140 @@
           if (f.peso)   stats += `<span class="fighter-stat">${f.peso}</span>`;
           if (f.nac)    stats += `<span class="fighter-stat">${f.nac}</span>`;
 
-          // Buscar foto original por índice si existe
-          const origCards = document.querySelectorAll('.fighter-card');
-          const origPhoto = f.photoIdx !== undefined && origCards[f.photoIdx]
-            ? (origCards[f.photoIdx].querySelector('.fighter-card-img')?.src || '')
-            : '';
-
-          card.innerHTML = `
-            <div class="fighter-card-actions">
-              <button class="staff-action-btn edit" onclick="rosterEditorOpen(this.closest('.fighter-card'))" title="Editar">
-                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </button>
-              <button class="staff-action-btn delete" onclick="rosterConfirmOpen(this.closest('.fighter-card'))" title="Eliminar">
-                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-              </button>
-            </div>
-            <img class="fighter-card-img" src="${origPhoto}" alt="${f.nombre} ${f.apellido}" />
-            <div class="fighter-card-overlay">
-              <span class="fighter-flag">${f.flag}</span>
-              <div class="fighter-name">${f.nombre}</div>
-              <div class="fighter-lastname">${f.apellido}</div>
-              ${nicknameHtml}
-              <div class="fighter-stats">${stats}</div>
-            </div>`;
-          grid.appendChild(card);
+          if (i < cards.length) {
+            // Actualizar card existente — texto + overlay, mantener foto
+            const card = cards[i];
+            card.dataset.nombre   = f.nombre;
+            card.dataset.apellido = f.apellido;
+            card.dataset.apodo    = f.apodo;
+            card.dataset.edad     = f.edad;
+            card.dataset.altura   = f.altura;
+            card.dataset.peso     = f.peso;
+            card.dataset.nac      = f.nac;
+            card.dataset.flag     = f.flag;
+            const overlay = card.querySelector('.fighter-card-overlay');
+            if (overlay) {
+              overlay.querySelector('.fighter-flag').textContent     = f.flag;
+              overlay.querySelector('.fighter-name').textContent     = f.nombre;
+              overlay.querySelector('.fighter-lastname').textContent = f.apellido;
+              const nick = overlay.querySelector('.fighter-nickname, .fighter-nickname.pending');
+              if (nick) nick.outerHTML = nicknameHtml;
+              overlay.querySelector('.fighter-stats').innerHTML = stats;
+            }
+          } else {
+            // Nueva card agregada por Staff
+            const card = document.createElement('div');
+            card.className = 'fighter-card';
+            card.dataset.nombre   = f.nombre;
+            card.dataset.apellido = f.apellido;
+            card.dataset.apodo    = f.apodo;
+            card.dataset.edad     = f.edad;
+            card.dataset.altura   = f.altura;
+            card.dataset.peso     = f.peso;
+            card.dataset.nac      = f.nac;
+            card.dataset.flag     = f.flag;
+            card.innerHTML = `
+              <div class="fighter-card-actions">
+                <button class="staff-action-btn edit" onclick="rosterEditorOpen(this.closest('.fighter-card'))" title="Editar">
+                  <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="staff-action-btn delete" onclick="rosterConfirmOpen(this.closest('.fighter-card'))" title="Eliminar">
+                  <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>
+              <div class="fighter-card-img" style="background:rgba(124,58,232,0.08);aspect-ratio:1/1;"></div>
+              <div class="fighter-card-overlay">
+                <span class="fighter-flag">${f.flag}</span>
+                <div class="fighter-name">${f.nombre}</div>
+                <div class="fighter-lastname">${f.apellido}</div>
+                ${nicknameHtml}
+                <div class="fighter-stats">${stats}</div>
+              </div>`;
+            grid.appendChild(card);
+          }
         });
+
+        if (fighters.length < cards.length) {
+          cards.slice(fighters.length).forEach(c => c.remove());
+        }
       }
 
-      /* ── EVENTOS ── */
+      /* ── EVENTOS: actualizar texto, no reconstruir ── */
       const eventosSnap = await getDoc(doc(db, 'safc', 'eventos'));
       if (eventosSnap.exists()) {
         const data = eventosSnap.data();
+        const BADGE_LABELS = { confirmed: 'Confirmado', upcoming: 'Próximamente', tbd: 'TBD' };
         const svgCal   = '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
         const svgClock = '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
         const svgPin   = '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>';
-        const BADGE_LABELS = { confirmed: 'Confirmado', upcoming: 'Próximamente', tbd: 'TBD' };
 
-        const colLeft = document.querySelector('.eventos-col');
-        colLeft.querySelectorAll('.evento-card').forEach(c => c.remove());
-        data.eventos.forEach(e => {
-          const card = document.createElement('div');
-          card.className = 'evento-card';
-          Object.assign(card.dataset, e);
+        const colLeft  = document.querySelector('.eventos-col');
+        const eCards   = Array.from(colLeft.querySelectorAll('.evento-card'));
+        data.eventos.forEach((e, i) => {
           const meta = `<span class="evento-meta-item"><svg viewBox="0 0 24 24">${svgCal}</svg>${e.fecha}</span>
                         <span class="evento-meta-item"><svg viewBox="0 0 24 24">${svgClock}</svg>${e.hora}</span>
                         <span class="evento-meta-item"><svg viewBox="0 0 24 24">${svgPin}</svg>${e.lugar}</span>`;
-          card.innerHTML = `
-            <div class="evento-card-actions">
-              <button class="staff-action-btn edit" onclick="eventoEditorOpen(this.closest('.evento-card'))" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-              <button class="staff-action-btn delete" onclick="eventoConfirmOpen(this.closest('.evento-card'))" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
-            </div>
-            <span class="evento-badge ${e.estado}">${BADGE_LABELS[e.estado]||'TBD'}</span>
-            <span class="evento-numero">${e.numero}</span>
-            <div class="evento-nombre">${e.nombre}</div>
-            <div class="evento-meta">${meta}</div>
-            <p class="evento-desc">${e.desc}</p>`;
-          colLeft.appendChild(card);
+          if (i < eCards.length) {
+            const card = eCards[i];
+            Object.assign(card.dataset, e);
+            const badge = card.querySelector('.evento-badge');
+            badge.textContent = BADGE_LABELS[e.estado] || 'TBD';
+            badge.className   = `evento-badge ${e.estado}`;
+            card.querySelector('.evento-numero').textContent = e.numero;
+            card.querySelector('.evento-nombre').textContent = e.nombre;
+            card.querySelector('.evento-meta').innerHTML     = meta;
+            card.querySelector('.evento-desc').textContent   = e.desc;
+          } else {
+            const card = document.createElement('div');
+            card.className = 'evento-card';
+            Object.assign(card.dataset, e);
+            card.innerHTML = `
+              <div class="evento-card-actions">
+                <button class="staff-action-btn edit" onclick="eventoEditorOpen(this.closest('.evento-card'))" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="staff-action-btn delete" onclick="eventoConfirmOpen(this.closest('.evento-card'))" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+              </div>
+              <span class="evento-badge ${e.estado}">${BADGE_LABELS[e.estado]||'TBD'}</span>
+              <span class="evento-numero">${e.numero}</span>
+              <div class="evento-nombre">${e.nombre}</div>
+              <div class="evento-meta">${meta}</div>
+              <p class="evento-desc">${e.desc}</p>`;
+            colLeft.appendChild(card);
+          }
         });
+        if (data.eventos.length < eCards.length) eCards.slice(data.eventos.length).forEach(c => c.remove());
 
         const colRight = document.querySelectorAll('.eventos-col')[1];
-        colRight.querySelectorAll('.noticia-card').forEach(c => c.remove());
-        data.noticias.forEach(n => {
-          const card = document.createElement('div');
-          card.className = 'noticia-card';
-          Object.assign(card.dataset, n);
-          card.innerHTML = `
-            <div class="noticia-card-actions">
-              <button class="staff-action-btn edit" onclick="noticiaEditorOpen(this.closest('.noticia-card'))" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-              <button class="staff-action-btn delete" onclick="noticiaConfirmOpen(this.closest('.noticia-card'))" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
-            </div>
-            <div class="noticia-header">
-              <span class="noticia-tipo">${n.tipo}</span>
-              <span class="noticia-fecha">${n.fecha}</span>
-            </div>
-            <div class="noticia-titulo">${n.titulo}</div>
-            <p class="noticia-texto">${n.texto}</p>`;
-          colRight.appendChild(card);
+        const nCards   = Array.from(colRight.querySelectorAll('.noticia-card'));
+        data.noticias.forEach((n, i) => {
+          if (i < nCards.length) {
+            const card = nCards[i];
+            Object.assign(card.dataset, n);
+            card.querySelector('.noticia-tipo').textContent   = n.tipo;
+            card.querySelector('.noticia-fecha').textContent  = n.fecha;
+            card.querySelector('.noticia-titulo').textContent = n.titulo;
+            card.querySelector('.noticia-texto').textContent  = n.texto;
+          } else {
+            const card = document.createElement('div');
+            card.className = 'noticia-card';
+            Object.assign(card.dataset, n);
+            card.innerHTML = `
+              <div class="noticia-card-actions">
+                <button class="staff-action-btn edit" onclick="noticiaEditorOpen(this.closest('.noticia-card'))" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="staff-action-btn delete" onclick="noticiaConfirmOpen(this.closest('.noticia-card'))" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+              </div>
+              <div class="noticia-header">
+                <span class="noticia-tipo">${n.tipo}</span>
+                <span class="noticia-fecha">${n.fecha}</span>
+              </div>
+              <div class="noticia-titulo">${n.titulo}</div>
+              <p class="noticia-texto">${n.texto}</p>`;
+            colRight.appendChild(card);
+          }
         });
+        if (data.noticias.length < nCards.length) nCards.slice(data.noticias.length).forEach(c => c.remove());
       }
 
-      /* ── CAMPEONES ── */
+      /* ── CAMPEONES: actualizar texto, no reconstruir ── */
       const campeonesSnap = await getDoc(doc(db, 'safc', 'campeones'));
       if (campeonesSnap.exists()) {
         const cards = document.querySelectorAll('.campeon-card');
@@ -4561,13 +4613,8 @@
             nombreEl.style.color    = 'var(--white)';
             nombreEl.style.fontStyle= 'normal';
             desdeEl.textContent     = t.campDesde ? 'Campeón desde ' + t.campDesde : '';
-            if (t.photo) {
-              avatar.style.border   = '2px solid rgba(201,162,39,0.4)';
-              avatar.innerHTML      = `<img src="${t.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
-            }
           }
 
-          // Historial
           const histData = JSON.parse(t.historial || '[]');
           const histEl   = card.querySelector('.campeon-historial');
           const histHtml = histData.length === 0
@@ -4584,44 +4631,50 @@
         });
       }
 
-      /* ── SPONSORS ── */
+      /* ── SPONSORS: actualizar texto, mantener logos ── */
       const sponsorsSnap = await getDoc(doc(db, 'safc', 'sponsors'));
       if (sponsorsSnap.exists()) {
-        const grid = document.querySelector('.sponsors-grid');
-        grid.querySelectorAll('.sponsor-card').forEach(c => c.remove());
-        sponsorsSnap.data().sponsors.forEach(s => {
-          const card = document.createElement('div');
-          card.className = 'sponsor-card';
-          card.dataset.nombre = s.nombre;
-          card.dataset.tipo   = s.tipo;
-          card.dataset.desc   = s.desc;
-          // Buscar logo original por nombre
-          const origSponsor = Array.from(document.querySelectorAll('.sponsor-card'))
-            .find(c => c.dataset.nombre === s.nombre);
-          const origLogo = origSponsor
-            ? origSponsor.querySelector('.sponsor-logo-wrap')?.innerHTML || ''
-            : '';
+        const sponsors = sponsorsSnap.data().sponsors;
+        const grid     = document.querySelector('.sponsors-grid');
+        const cards    = Array.from(grid.querySelectorAll('.sponsor-card'));
 
-          card.innerHTML = `
-            <div class="sponsor-card-actions">
-              <button class="staff-action-btn edit" onclick="sponsorEditorOpen(this.closest('.sponsor-card'))" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-              <button class="staff-action-btn delete" onclick="sponsorConfirmOpen(this.closest('.sponsor-card'))" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
-            </div>
-            <div class="sponsor-logo-wrap">${origLogo}</div>
-            <div class="sponsor-info">
-              <span class="sponsor-tipo">${s.tipo}</span>
-              <div class="sponsor-nombre">${s.nombre}</div>
-              <p class="sponsor-desc">${s.desc}</p>
-            </div>`;
-          grid.appendChild(card);
+        sponsors.forEach((s, i) => {
+          if (i < cards.length) {
+            const card = cards[i];
+            card.dataset.nombre = s.nombre;
+            card.dataset.tipo   = s.tipo;
+            card.dataset.desc   = s.desc;
+            card.querySelector('.sponsor-nombre').textContent = s.nombre;
+            card.querySelector('.sponsor-tipo').textContent   = s.tipo;
+            card.querySelector('.sponsor-desc').textContent   = s.desc;
+          } else {
+            const card = document.createElement('div');
+            card.className = 'sponsor-card';
+            card.dataset.nombre = s.nombre;
+            card.dataset.tipo   = s.tipo;
+            card.dataset.desc   = s.desc;
+            card.innerHTML = `
+              <div class="sponsor-card-actions">
+                <button class="staff-action-btn edit" onclick="sponsorEditorOpen(this.closest('.sponsor-card'))" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="staff-action-btn delete" onclick="sponsorConfirmOpen(this.closest('.sponsor-card'))" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+              </div>
+              <div class="sponsor-logo-wrap"></div>
+              <div class="sponsor-info">
+                <span class="sponsor-tipo">${s.tipo}</span>
+                <div class="sponsor-nombre">${s.nombre}</div>
+                <p class="sponsor-desc">${s.desc}</p>
+              </div>`;
+            grid.appendChild(card);
+          }
         });
+
+        if (sponsors.length < cards.length) {
+          cards.slice(sponsors.length).forEach(c => c.remove());
+        }
       }
     }
 
-    /* ══════════════════════════════════════════
-       EXPONER FUNCIONES AL SCOPE GLOBAL
-       (el script principal no es módulo)
-    ══════════════════════════════════════════ */
+    
     window.saveAllToFirebase = saveAllToFirebase;
     window.loadFromFirebase  = loadFromFirebase;
 
