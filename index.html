@@ -4238,19 +4238,16 @@
 
     /* Serializar una card a objeto plano */
     function serializeStaffCard(card) {
-      const img = card.querySelector('.staff-card-photo img');
       return {
         nombre:   card.dataset.nombre   || '',
         apellido: card.dataset.apellido || '',
         cargo:    card.dataset.cargo    || '',
         bio:      card.dataset.bio      || '',
-        photo:    img ? img.src : '',
         noPhoto:  card.querySelector('.staff-card-photo.no-photo') !== null,
       };
     }
 
     function serializeFighterCard(card) {
-      const img = card.querySelector('.fighter-card-img');
       return {
         nombre:   card.dataset.nombre   || '',
         apellido: card.dataset.apellido || '',
@@ -4260,7 +4257,7 @@
         peso:     card.dataset.peso     || '',
         nac:      card.dataset.nac      || '',
         flag:     card.dataset.flag     || '',
-        photo:    img ? img.src : '',
+        photoIdx: card.dataset.photoIdx || '',
       };
     }
 
@@ -4286,11 +4283,6 @@
     }
 
     function serializeCampeonCard(card) {
-      const avatarImg = card.querySelector('.campeon-avatar-placeholder img');
-      const entries   = Array.from(card.querySelectorAll('.historial-entry')).map(e => ({
-        nombre:  e.querySelector('.historial-entry-nombre')?.textContent || '',
-        periodo: e.querySelector('.historial-entry-periodo')?.textContent || '',
-      }));
       return {
         categoria:    card.dataset.categoria    || '',
         titulo:       card.dataset.titulo       || '',
@@ -4299,17 +4291,14 @@
         campApellido: card.dataset.campApellido || '',
         campDesde:    card.dataset.campDesde    || '',
         historial:    card.dataset.historial    || '[]',
-        photo:        avatarImg ? avatarImg.src : '',
       };
     }
 
     function serializeSponsorCard(card) {
-      const img = card.querySelector('.sponsor-logo-wrap img');
       return {
         nombre: card.dataset.nombre || '',
         tipo:   card.dataset.tipo   || '',
         desc:   card.dataset.desc   || '',
-        photo:  img ? img.src : '',
       };
     }
 
@@ -4387,8 +4376,8 @@
           card.dataset.cargo    = m.cargo;
           card.dataset.bio      = m.bio;
 
-          const photoHtml = m.photo
-            ? `<div class="staff-card-photo"><img src="${m.photo}" alt="${m.nombre}" /></div>`
+          const photoHtml = m.noPhoto
+            ? `<div class="staff-card-photo no-photo"><div class="staff-pending-overlay"><span>Foto próximamente</span></div></div>`
             : `<div class="staff-card-photo no-photo"><div class="staff-pending-overlay"><span>Foto próximamente</span></div></div>`;
 
           card.innerHTML = `
@@ -4440,6 +4429,12 @@
           if (f.peso)   stats += `<span class="fighter-stat">${f.peso}</span>`;
           if (f.nac)    stats += `<span class="fighter-stat">${f.nac}</span>`;
 
+          // Buscar foto original por índice si existe
+          const origCards = document.querySelectorAll('.fighter-card');
+          const origPhoto = f.photoIdx !== undefined && origCards[f.photoIdx]
+            ? (origCards[f.photoIdx].querySelector('.fighter-card-img')?.src || '')
+            : '';
+
           card.innerHTML = `
             <div class="fighter-card-actions">
               <button class="staff-action-btn edit" onclick="rosterEditorOpen(this.closest('.fighter-card'))" title="Editar">
@@ -4449,7 +4444,7 @@
                 <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
               </button>
             </div>
-            <img class="fighter-card-img" src="${f.photo}" alt="${f.nombre} ${f.apellido}" />
+            <img class="fighter-card-img" src="${origPhoto}" alt="${f.nombre} ${f.apellido}" />
             <div class="fighter-card-overlay">
               <span class="fighter-flag">${f.flag}</span>
               <div class="fighter-name">${f.nombre}</div>
@@ -4575,12 +4570,19 @@
           card.dataset.nombre = s.nombre;
           card.dataset.tipo   = s.tipo;
           card.dataset.desc   = s.desc;
+          // Buscar logo original por nombre
+          const origSponsor = Array.from(document.querySelectorAll('.sponsor-card'))
+            .find(c => c.dataset.nombre === s.nombre);
+          const origLogo = origSponsor
+            ? origSponsor.querySelector('.sponsor-logo-wrap')?.innerHTML || ''
+            : '';
+
           card.innerHTML = `
             <div class="sponsor-card-actions">
               <button class="staff-action-btn edit" onclick="sponsorEditorOpen(this.closest('.sponsor-card'))" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
               <button class="staff-action-btn delete" onclick="sponsorConfirmOpen(this.closest('.sponsor-card'))" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
             </div>
-            <div class="sponsor-logo-wrap"><img src="${s.photo}" alt="${s.nombre}" /></div>
+            <div class="sponsor-logo-wrap">${origLogo}</div>
             <div class="sponsor-info">
               <span class="sponsor-tipo">${s.tipo}</span>
               <div class="sponsor-nombre">${s.nombre}</div>
