@@ -4462,6 +4462,10 @@
             card.dataset.apellido = m.apellido;
             card.dataset.cargo    = m.cargo;
             card.dataset.bio      = m.bio;
+            const newPhotoHtml = m.photoUrl
+              ? `<div class="staff-card-photo"><img src="${m.photoUrl}" alt="${m.nombre}" /></div>`
+              : `<div class="staff-card-photo no-photo"><div class="staff-pending-overlay"><span>Foto próximamente</span></div></div>`;
+
             card.innerHTML = `
               <div class="staff-card-actions">
                 <button class="staff-action-btn edit" onclick="staffEditorOpen(this.closest('.staff-card'))" title="Editar">
@@ -4471,7 +4475,7 @@
                   <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                 </button>
               </div>
-              <div class="staff-card-photo no-photo"><div class="staff-pending-overlay"><span>Foto próximamente</span></div></div>
+              ${newPhotoHtml}
               <div class="staff-card-body">
                 <span class="staff-card-badge">${m.cargo}</span>
                 <div class="staff-card-name">${m.nombre}</div>
