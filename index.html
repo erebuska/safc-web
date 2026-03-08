@@ -1945,9 +1945,27 @@
     }
     .save-cloud-btn.active { display: flex; }
 
+  
+    /* ── Anti-flash: ocultar contenido dinámico hasta que Firebase cargue ── */
+    .firebase-loading .staff-grid,
+    .firebase-loading .roster-grid,
+    .firebase-loading .eventos-wrapper,
+    .firebase-loading .campeones-grid,
+    .firebase-loading .sponsors-grid {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .firebase-ready .staff-grid,
+    .firebase-ready .roster-grid,
+    .firebase-ready .eventos-wrapper,
+    .firebase-ready .campeones-grid,
+    .firebase-ready .sponsors-grid {
+      opacity: 1;
+    }
+
   </style>
 </head>
-<body>
+<body class="firebase-loading">
 
   <!-- NAVBAR -->
   <nav id="navbar">
@@ -4237,13 +4255,14 @@
     ══════════════════════════════════════════ */
 
     /* Serializar una card a objeto plano */
-    function serializeStaffCard(card) {
+    function serializeStaffCard(card, idx) {
       return {
         nombre:   card.dataset.nombre   || '',
         apellido: card.dataset.apellido || '',
         cargo:    card.dataset.cargo    || '',
         bio:      card.dataset.bio      || '',
         noPhoto:  card.querySelector('.staff-card-photo.no-photo') !== null,
+        photoIdx: String(idx),
       };
     }
 
@@ -4311,7 +4330,7 @@
       /* -- Staff -- */
       const staffCards = document.querySelectorAll('.staff-card');
       await setDoc(doc(db, 'safc', 'staff'), {
-        members: Array.from(staffCards).map(serializeStaffCard)
+        members: Array.from(staffCards).map((c, i) => serializeStaffCard(c, i))
       });
 
       /* -- Roster -- */
@@ -4376,9 +4395,15 @@
           card.dataset.cargo    = m.cargo;
           card.dataset.bio      = m.bio;
 
-          const photoHtml = m.noPhoto
+          // Recuperar foto original del HTML por índice
+          const origStaffCards = document.querySelectorAll('.staff-card');
+          const origStaffPhoto = (!m.noPhoto && m.photoIdx !== undefined && origStaffCards[m.photoIdx])
+            ? origStaffCards[m.photoIdx].querySelector('.staff-card-photo')?.innerHTML || ''
+            : '';
+
+          const photoHtml = m.noPhoto || !origStaffPhoto
             ? `<div class="staff-card-photo no-photo"><div class="staff-pending-overlay"><span>Foto próximamente</span></div></div>`
-            : `<div class="staff-card-photo no-photo"><div class="staff-pending-overlay"><span>Foto próximamente</span></div></div>`;
+            : `<div class="staff-card-photo">${origStaffPhoto}</div>`;
 
           card.innerHTML = `
             <div class="staff-card-actions">
@@ -4602,7 +4627,12 @@
 
     /* Cargar datos al iniciar */
     window.addEventListener('DOMContentLoaded', () => {
-      loadFromFirebase().catch(err => console.warn('Firebase load:', err));
+      loadFromFirebase()
+        .catch(err => console.warn('Firebase load:', err))
+        .finally(() => {
+          document.body.classList.remove('firebase-loading');
+          document.body.classList.add('firebase-ready');
+        });
     });
 
   </script>
