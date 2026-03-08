@@ -1963,6 +1963,74 @@
       opacity: 1;
     }
 
+  
+    /* ══════════════════════════════════════════
+       SPA — NAVEGACIÓN POR SECCIONES
+    ══════════════════════════════════════════ */
+
+    /* Todas las secciones ocultas por defecto */
+    .section { display: none !important; }
+
+    /* Solo la activa se muestra */
+    .section.spa-active { display: block !important; }
+
+    /* Separadores y toolbars: ocultos si su sección no está activa */
+    .section-separator { display: none !important; }
+
+    /* Bloque de bienvenida en home */
+    .welcome-block {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 40px 100px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+    }
+    .welcome-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+    .welcome-card:hover {
+      border-color: var(--purple-mid);
+      transform: translateY(-4px);
+    }
+    .welcome-card-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+    .welcome-card-title {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--white);
+    }
+    .welcome-card-desc {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--gray);
+      line-height: 1.6;
+      flex: 1;
+    }
+    .welcome-card-cta {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--purple-accent);
+      margin-top: 8px;
+    }
+    @media (max-width: 768px) {
+      .welcome-block { grid-template-columns: 1fr; padding: 40px 20px 60px; }
+    }
+
   </style>
 </head>
 <body class="firebase-loading">
@@ -1976,13 +2044,13 @@
         <span class="sub">San Andreas Fighters Council</span>
       </div>
     </div>
-    <ul class="nav-links">
-      <li><a href="#home"      class="active" onclick="setActive(this)">Inicio</a></li>
-      <li><a href="#staff"     onclick="setActive(this)">Staff</a></li>
-      <li><a href="#roster"    onclick="setActive(this)">Luchadores</a></li>
-      <li><a href="#eventos"   onclick="setActive(this)">Eventos</a></li>
-      <li><a href="#campeones" onclick="setActive(this)">Campeones</a></li>
-      <li><a href="#sponsors"  onclick="setActive(this)">Sponsors</a></li>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#home"      class="active" onclick="navigateTo('home');return false;">Inicio</a></li>
+      <li><a href="#staff"     onclick="navigateTo('staff');return false;">Staff</a></li>
+      <li><a href="#roster"    onclick="navigateTo('roster');return false;">Luchadores</a></li>
+      <li><a href="#eventos"   onclick="navigateTo('eventos');return false;">Eventos</a></li>
+      <li><a href="#campeones" onclick="navigateTo('campeones');return false;">Campeones</a></li>
+      <li><a href="#sponsors"  onclick="navigateTo('sponsors');return false;">Sponsors</a></li>
     </ul>
     <button class="save-cloud-btn" id="save-cloud-btn" onclick="saveAllToFirebase()" title="Guardar cambios en la nube"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Guardar</button>
     <div class="staff-badge" id="staff-badge">
@@ -2004,9 +2072,43 @@
           La organización de artes marciales más prestigiosa de San Andreas.
           Competición de élite, luchadores de clase mundial y una historia forjada en el octágono.
         </p>
-        <span class="hero-cta" onclick="scrollToSection('roster')">Ver Luchadores</span>
+        <span class="hero-cta" onclick="navigateTo('roster')">Ver Luchadores</span>
       </div>
     </section>
+
+    <!-- Bloque de bienvenida -->
+    <div class="welcome-block">
+      <div class="welcome-card" onclick="navigateTo('staff')">
+        <div class="welcome-card-icon">👥</div>
+        <div class="welcome-card-title">CUERPO DE STAFF</div>
+        <p class="welcome-card-desc">Conocé al equipo directivo y administrativo que hace posible la organización.</p>
+        <span class="welcome-card-cta">Ver Staff →</span>
+      </div>
+      <div class="welcome-card" onclick="navigateTo('roster')">
+        <div class="welcome-card-icon">🥊</div>
+        <div class="welcome-card-title">LUCHADORES</div>
+        <p class="welcome-card-desc">Explorá el roster activo de competidores que representan al SAFC en el octágono.</p>
+        <span class="welcome-card-cta">Ver Roster →</span>
+      </div>
+      <div class="welcome-card" onclick="navigateTo('eventos')">
+        <div class="welcome-card-icon">📅</div>
+        <div class="welcome-card-title">EVENTOS</div>
+        <p class="welcome-card-desc">Próximas peleas, comunicados oficiales y toda la actividad de la organización.</p>
+        <span class="welcome-card-cta">Ver Eventos →</span>
+      </div>
+      <div class="welcome-card" onclick="navigateTo('campeones')">
+        <div class="welcome-card-icon">🏆</div>
+        <div class="welcome-card-title">CAMPEONES</div>
+        <p class="welcome-card-desc">Los actuales portadores del cinturón en cada categoría de peso del SAFC.</p>
+        <span class="welcome-card-cta">Ver Campeones →</span>
+      </div>
+      <div class="welcome-card" onclick="navigateTo('sponsors')">
+        <div class="welcome-card-icon">🤝</div>
+        <div class="welcome-card-title">SPONSORS</div>
+        <p class="welcome-card-desc">Las organizaciones que respaldan y hacen posible el crecimiento del SAFC.</p>
+        <span class="welcome-card-cta">Ver Sponsors →</span>
+      </div>
+    </div>
 
     <div class="section-separator"></div>
 
@@ -4261,6 +4363,47 @@
 
     /* ── INIT ── */
     window.addEventListener('DOMContentLoaded', setLogos);
+
+    /* ══════════════════════════════════════════
+       SPA — LÓGICA DE NAVEGACIÓN
+    ══════════════════════════════════════════ */
+
+    const SPA_SECTIONS = ['home', 'staff', 'roster', 'eventos', 'campeones', 'sponsors'];
+
+    function navigateTo(sectionId) {
+      SPA_SECTIONS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('spa-active');
+      });
+
+      const target = document.getElementById(sectionId);
+      if (target) {
+        target.classList.add('spa-active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      const links = document.querySelectorAll('#nav-links a');
+      links.forEach(a => {
+        a.classList.remove('active');
+        if (a.getAttribute('href') === '#' + sectionId) a.classList.add('active');
+      });
+
+      history.pushState({ section: sectionId }, '', '#' + sectionId);
+    }
+
+    function spaInit() {
+      const hash = window.location.hash.replace('#', '');
+      const initial = SPA_SECTIONS.includes(hash) ? hash : 'home';
+      navigateTo(initial);
+    }
+
+    window.addEventListener('popstate', (e) => {
+      const section = (e.state && e.state.section) || 'home';
+      navigateTo(section);
+    });
+
+    function scrollToSection(id) { navigateTo(id); }
+    function setActive(el) {}
   </script>
 
 
@@ -4781,6 +4924,7 @@
         .finally(() => {
           document.body.classList.remove('firebase-loading');
           document.body.classList.add('firebase-ready');
+          spaInit();
         });
     });
 
