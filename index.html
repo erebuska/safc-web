@@ -3179,6 +3179,22 @@
     }
 
     /* ── STAFF AUTH ── */
+    
+    /* ── Cloudinary config ── */
+    const CLOUDINARY_CLOUD  = 'dc3r788o3';
+    const CLOUDINARY_PRESET = 'jzxfef3h';
+    const CLOUDINARY_URL    = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
+
+    async function uploadToCloudinary(file) {
+      const fd = new FormData();
+      fd.append('file',         file);
+      fd.append('upload_preset', CLOUDINARY_PRESET);
+      const res  = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || 'Cloudinary upload failed');
+      return data.secure_url;   // URL pública permanente
+    }
+
     const STAFF_PASS = "brt$=7:u+6lI(rmDRUej";   /* Cambiá esto cuando quieras */
     let staffLoggedIn = false;
 
@@ -3331,17 +3347,21 @@
     }
 
     /* ── Manejar foto ── */
-    function editorHandlePhoto(input) {
+    async function editorHandlePhoto(input) {
       const file = input.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        editorPhotoData = e.target.result;
-        const preview = document.getElementById('editor-photo-preview');
-        preview.classList.remove('empty');
+      const preview = document.getElementById('editor-photo-preview');
+      preview.classList.remove('empty');
+      preview.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-family:var(--font-ui);font-size:9px;letter-spacing:1px;color:var(--purple-accent);">SUBIENDO...</div>';
+      try {
+        editorPhotoData = await uploadToCloudinary(file);
         preview.innerHTML = '<img src="' + editorPhotoData + '" />';
-      };
-      reader.readAsDataURL(file);
+      } catch(e) {
+        preview.classList.add('empty');
+        preview.innerHTML = '';
+        showToast('✗ Error al subir la foto');
+        console.error(e);
+      }
     }
 
     /* ── Guardar (crear o editar) ── */
@@ -3514,17 +3534,21 @@
       rosterPhotoData  = null;
     }
 
-    function rosterHandlePhoto(input) {
+    async function rosterHandlePhoto(input) {
       const file = input.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        rosterPhotoData = e.target.result;
-        const preview = document.getElementById('roster-photo-preview');
-        preview.classList.remove('empty');
+      const preview = document.getElementById('roster-photo-preview');
+      preview.classList.remove('empty');
+      preview.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-family:var(--font-ui);font-size:9px;letter-spacing:1px;color:var(--purple-accent);">SUBIENDO...</div>';
+      try {
+        rosterPhotoData = await uploadToCloudinary(file);
         preview.innerHTML = '<img src="' + rosterPhotoData + '" />';
-      };
-      reader.readAsDataURL(file);
+      } catch(e) {
+        preview.classList.add('empty');
+        preview.innerHTML = '';
+        showToast('✗ Error al subir la foto');
+        console.error(e);
+      }
     }
 
     function buildFighterStats(edad, altura, peso, nac) {
@@ -3943,17 +3967,21 @@
       document.getElementById('campeon-fields-coronado').style.display = val === 'coronado' ? 'block' : 'none';
     }
 
-    function campeonHandlePhoto(input) {
+    async function campeonHandlePhoto(input) {
       const file = input.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        campeonPhotoData = e.target.result;
-        const preview = document.getElementById('campeon-photo-preview');
-        preview.classList.remove('empty');
+      const preview = document.getElementById('campeon-photo-preview');
+      preview.classList.remove('empty');
+      preview.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-family:var(--font-ui);font-size:9px;letter-spacing:1px;color:var(--purple-accent);">SUBIENDO...</div>';
+      try {
+        campeonPhotoData = await uploadToCloudinary(file);
         preview.innerHTML = '<img src="' + campeonPhotoData + '" />';
-      };
-      reader.readAsDataURL(file);
+      } catch(e) {
+        preview.classList.add('empty');
+        preview.innerHTML = '';
+        showToast('✗ Error al subir la foto');
+        console.error(e);
+      }
     }
 
     function campeonAddHistorial() {
@@ -4127,17 +4155,21 @@
       sponsorPhotoData = null;
     }
 
-    function sponsorHandlePhoto(input) {
+    async function sponsorHandlePhoto(input) {
       const file = input.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        sponsorPhotoData = e.target.result;
-        const preview = document.getElementById('sponsor-photo-preview');
-        preview.classList.remove('empty');
+      const preview = document.getElementById('sponsor-photo-preview');
+      preview.classList.remove('empty');
+      preview.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-family:var(--font-ui);font-size:9px;letter-spacing:1px;color:var(--purple-accent);">SUBIENDO...</div>';
+      try {
+        sponsorPhotoData = await uploadToCloudinary(file);
         preview.innerHTML = '<img src="' + sponsorPhotoData + '" />';
-      };
-      reader.readAsDataURL(file);
+      } catch(e) {
+        preview.classList.add('empty');
+        preview.innerHTML = '';
+        showToast('✗ Error al subir la foto');
+        console.error(e);
+      }
     }
 
     function sponsorEditorSave() {
@@ -4256,6 +4288,9 @@
 
     /* Serializar una card a objeto plano */
     function serializeStaffCard(card, idx) {
+      const img = card.querySelector('.staff-card-photo img');
+      const src = img ? img.src : '';
+      const isCloudinary = src.startsWith('https://res.cloudinary.com');
       return {
         nombre:   card.dataset.nombre   || '',
         apellido: card.dataset.apellido || '',
@@ -4263,10 +4298,14 @@
         bio:      card.dataset.bio      || '',
         noPhoto:  card.querySelector('.staff-card-photo.no-photo') !== null,
         photoIdx: String(idx),
+        photoUrl: isCloudinary ? src : '',
       };
     }
 
     function serializeFighterCard(card) {
+      const img = card.querySelector('.fighter-card-img');
+      const src = img ? img.src : '';
+      const isCloudinary = src.startsWith('https://res.cloudinary.com');
       return {
         nombre:   card.dataset.nombre   || '',
         apellido: card.dataset.apellido || '',
@@ -4277,6 +4316,7 @@
         nac:      card.dataset.nac      || '',
         flag:     card.dataset.flag     || '',
         photoIdx: card.dataset.photoIdx || '',
+        photoUrl: isCloudinary ? src : '',
       };
     }
 
@@ -4302,6 +4342,9 @@
     }
 
     function serializeCampeonCard(card) {
+      const img = card.querySelector('.campeon-avatar-placeholder img');
+      const src = img ? img.src : '';
+      const isCloudinary = src.startsWith('https://res.cloudinary.com');
       return {
         categoria:    card.dataset.categoria    || '',
         titulo:       card.dataset.titulo       || '',
@@ -4310,14 +4353,19 @@
         campApellido: card.dataset.campApellido || '',
         campDesde:    card.dataset.campDesde    || '',
         historial:    card.dataset.historial    || '[]',
+        photoUrl:     isCloudinary ? src : '',
       };
     }
 
     function serializeSponsorCard(card) {
+      const img = card.querySelector('.sponsor-logo-wrap img');
+      const src = img ? img.src : '';
+      const isCloudinary = src.startsWith('https://res.cloudinary.com');
       return {
-        nombre: card.dataset.nombre || '',
-        tipo:   card.dataset.tipo   || '',
-        desc:   card.dataset.desc   || '',
+        nombre:   card.dataset.nombre || '',
+        tipo:     card.dataset.tipo   || '',
+        desc:     card.dataset.desc   || '',
+        photoUrl: isCloudinary ? src  : '',
       };
     }
 
@@ -4389,7 +4437,7 @@
 
         members.forEach((m, i) => {
           if (i < cards.length) {
-            // Actualizar card existente — solo texto
+            // Actualizar card existente — texto + foto Cloudinary si existe
             const card = cards[i];
             card.dataset.nombre   = m.nombre;
             card.dataset.apellido = m.apellido;
@@ -4399,6 +4447,13 @@
             card.querySelector('.staff-card-lastname').textContent = m.apellido;
             card.querySelector('.staff-card-badge').textContent    = m.cargo;
             card.querySelector('.staff-card-bio').textContent      = m.bio;
+            if (m.photoUrl) {
+              const photoWrap = card.querySelector('.staff-card-photo');
+              if (photoWrap) {
+                photoWrap.classList.remove('no-photo');
+                photoWrap.innerHTML = `<img src="${m.photoUrl}" alt="${m.nombre}" />`;
+              }
+            }
           } else {
             // Card nueva agregada por Staff — sin foto
             const card = document.createElement('div');
@@ -4453,7 +4508,7 @@
           if (f.nac)    stats += `<span class="fighter-stat">${f.nac}</span>`;
 
           if (i < cards.length) {
-            // Actualizar card existente — texto + overlay, mantener foto
+            // Actualizar card existente — texto + overlay + foto Cloudinary si existe
             const card = cards[i];
             card.dataset.nombre   = f.nombre;
             card.dataset.apellido = f.apellido;
@@ -4463,6 +4518,10 @@
             card.dataset.peso     = f.peso;
             card.dataset.nac      = f.nac;
             card.dataset.flag     = f.flag;
+            if (f.photoUrl) {
+              const img = card.querySelector('.fighter-card-img');
+              if (img) img.src = f.photoUrl;
+            }
             const overlay = card.querySelector('.fighter-card-overlay');
             if (overlay) {
               overlay.querySelector('.fighter-flag').textContent     = f.flag;
@@ -4613,6 +4672,10 @@
             nombreEl.style.color    = 'var(--white)';
             nombreEl.style.fontStyle= 'normal';
             desdeEl.textContent     = t.campDesde ? 'Campeón desde ' + t.campDesde : '';
+            if (t.photoUrl && avatar) {
+              avatar.style.border = '2px solid rgba(201,162,39,0.4)';
+              avatar.innerHTML    = `<img src="${t.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+            }
           }
 
           const histData = JSON.parse(t.historial || '[]');
@@ -4647,6 +4710,14 @@
             card.querySelector('.sponsor-nombre').textContent = s.nombre;
             card.querySelector('.sponsor-tipo').textContent   = s.tipo;
             card.querySelector('.sponsor-desc').textContent   = s.desc;
+            if (s.photoUrl) {
+              const logoWrap = card.querySelector('.sponsor-logo-wrap');
+              if (logoWrap) logoWrap.innerHTML = `<img src="${s.photoUrl}" alt="${s.nombre}" />`;
+            }
+            if (s.photoUrl) {
+              const logoWrap = card.querySelector('.sponsor-logo-wrap');
+              if (logoWrap) logoWrap.innerHTML = `<img src="${s.photoUrl}" alt="${s.nombre}" />`;
+            }
           } else {
             const card = document.createElement('div');
             card.className = 'sponsor-card';
