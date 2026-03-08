@@ -4354,22 +4354,6 @@
 
 
     /* ── INIT ── */
-    window.addEventListener('DOMContentLoaded', () => {
-      setLogos();
-      // Activar sección inicial inmediatamente sin esperar Firebase
-      const hash = window.location.hash.replace('#', '');
-      const initial = SPA_SECTIONS && SPA_SECTIONS.includes(hash) ? hash : 'home';
-      // Marcar spa-active directamente sin history.pushState aún
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('spa-active'));
-      const initSection = document.getElementById(initial);
-      if (initSection) initSection.classList.add('spa-active');
-      // Actualizar navbar
-      document.querySelectorAll('#nav-links a').forEach(a => {
-        a.classList.remove('active');
-        if (a.getAttribute('href') === '#' + initial) a.classList.add('active');
-      });
-    });
-
     /* ══════════════════════════════════════════
        SPA — LÓGICA DE NAVEGACIÓN
     ══════════════════════════════════════════ */
@@ -4410,7 +4394,13 @@
 
     function scrollToSection(id) { navigateTo(id); }
     function setActive(el) {}
-  </script>
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setLogos();
+      spaInit();
+    });
+
+
 
 
   <!-- ══════════════════════════════════════════
@@ -4930,7 +4920,6 @@
         .finally(() => {
           document.body.classList.remove('firebase-loading');
           document.body.classList.add('firebase-ready');
-          spaInit();
         });
     });
 
