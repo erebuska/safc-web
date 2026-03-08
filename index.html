@@ -1946,22 +1946,7 @@
     .save-cloud-btn.active { display: flex; }
 
   
-    /* ── Anti-flash: ocultar contenido dinámico hasta que Firebase cargue ── */
-    .firebase-loading .staff-grid,
-    .firebase-loading .roster-grid,
-    .firebase-loading .eventos-wrapper,
-    .firebase-loading .campeones-grid,
-    .firebase-loading .sponsors-grid {
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    .firebase-ready .staff-grid,
-    .firebase-ready .roster-grid,
-    .firebase-ready .eventos-wrapper,
-    .firebase-ready .campeones-grid,
-    .firebase-ready .sponsors-grid {
-      opacity: 1;
-    }
+    /* Anti-flash removido — SPA maneja visibilidad */
 
   
     /* ══════════════════════════════════════════
@@ -2058,7 +2043,7 @@
 
   </style>
 </head>
-<body class="firebase-loading">
+<body>
 
   <!-- NAVBAR -->
   <nav id="navbar">
